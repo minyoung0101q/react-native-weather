@@ -1,4 +1,6 @@
+import * as Location from "expo-location";
 import { StatusBar } from "expo-status-bar";
+import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
@@ -6,10 +8,37 @@ const SCREEN_WIDTH = Dimensions.get("window").width;
 console.log(SCREEN_WIDTH);
 
 export default function App() {
+  const [city, setCity] = useState("Loading...");
+  const [location, setLocation] = useState();
+  const [ok, setOk] = useState(true);
+
+  const ask = async () => {
+    const { granted } = await Location.requestForegroundPermissionsAsync();
+    if (!granted) {
+      //허가를 받지 않았다면 setOk를 false로 해줌
+      setOk(false); //그러면 유저가 권한 요청을 거절했다는 것을 알 수 있음, 나중에는 허가를 받지 않은 경우, 슬픈 얼굴을 보여줄 수도 있음
+    }
+    const {
+      coords: { latitude, longitude },
+    } = await Location.getCurrentPositionAsync({ accuracy: 5 });
+    const location = await Location.reverseGeocodeAsync(
+      {
+        latitude,
+        longitude,
+      },
+      { useGoogleMaps: false }
+    );
+    setCity(location[0].city);
+  };
+
+  //이제 이 컴포넌트가 마운트 되면 useEffect를 사용해서 getPermissions function을 호출
+  useEffect(() => {
+    ask();
+  }, []);
   return (
     <View style={styles.container}>
       <View style={styles.city}>
-        <Text style={styles.cityName}>Seoul</Text>
+        <Text style={styles.cityName}>{city}</Text>
       </View>
       {/* styles.weather 이것이 모든 예보의 Container가 되는 것이 목표 */}
       <ScrollView
