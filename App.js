@@ -9,10 +9,9 @@ console.log(SCREEN_WIDTH);
 
 export default function App() {
   const [city, setCity] = useState("Loading...");
-  const [location, setLocation] = useState();
   const [ok, setOk] = useState(true);
 
-  const ask = async () => {
+  const getWeather = async () => {
     const { granted } = await Location.requestForegroundPermissionsAsync();
     if (!granted) {
       //허가를 받지 않았다면 setOk를 false로 해줌
@@ -33,7 +32,7 @@ export default function App() {
 
   //이제 이 컴포넌트가 마운트 되면 useEffect를 사용해서 getPermissions function을 호출
   useEffect(() => {
-    ask();
+    getWeather();
   }, []);
   return (
     <View style={styles.container}>
