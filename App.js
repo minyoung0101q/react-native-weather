@@ -4,11 +4,11 @@ import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
-
-console.log(SCREEN_WIDTH);
+const API_KEY = "19e054334c61b27dd891a0dfdef0072e";
 
 export default function App() {
   const [city, setCity] = useState("Loading...");
+  const [days, setDays] = useState([]);
   const [ok, setOk] = useState(true);
 
   const getWeather = async () => {
@@ -28,9 +28,15 @@ export default function App() {
       { useGoogleMaps: false }
     );
     setCity(location[0].city);
+    const response = await fetch(
+      `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}`
+    );
+    const json = await response.json();
+    console.log(json.main);
+    setDays(json.main);
   };
 
-  //이제 이 컴포넌트가 마운트 되면 useEffect를 사용해서 getPermissions function을 호출
+  //이제 이 컴포넌트가 마운트되면 useEffect를 사용해서 getPermissions function을 호출
   useEffect(() => {
     getWeather();
   }, []);
