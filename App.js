@@ -28,12 +28,41 @@ export default function App() {
       { useGoogleMaps: false }
     );
     setCity(location[0].city);
+
     const response = await fetch(
       `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}`
     );
     const json = await response.json();
+    console.log(json);
     console.log(json.main);
-    setDays(json.main);
+    // setDays(json.main);
+
+    //then 방식, await 대신에 then, async 필요없고 fetch(url).then 하면 됨
+    // fetch(
+    //   `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}`
+    // )
+    //   .then((response) => response.json())
+    //   .then((data) => {
+    //     console.log(data.main);
+    //   });
+
+    //await async 축약 방식
+    // const json = await (
+    //   await fetch(
+    //     `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}`
+    //   )
+    // ).json();
+    // console.log(json);
+    // console.log(json.main);
+
+    //await aysnc 기본 방식
+    // const response = await fetch(
+    //   `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}`
+    // );
+    // const json = await response.json();
+    // console.log(json);
+    // console.log(json.main);
+    // setDays(json.main);
   };
 
   //이제 이 컴포넌트가 마운트되면 useEffect를 사용해서 getPermissions function을 호출
