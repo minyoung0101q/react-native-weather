@@ -1,102 +1,100 @@
-import * as Location from "expo-location";
 import { StatusBar } from "expo-status-bar";
-import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, ScrollView, Dimensions } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Dimensions,
+  ScrollView,
+  ActivityIndicator,
+} from "react-native";
+import * as Location from "expo-location";
+import React, { useState, useEffect } from "react";
 
 const SCREEN_WIDTH = Dimensions.get("window").width;
 const API_KEY = "19e054334c61b27dd891a0dfdef0072e";
 
 export default function App() {
+  // 내 위치 정보를 받아와서 내 위치에 맞는 날씨 api 가져오기
+  // 위치 허용하기
+  // 내 위치에 맞는 날씨 가져오기
   const [city, setCity] = useState("Loading...");
-  const [days, setDays] = useState([]);
   const [ok, setOk] = useState(true);
+  const [days, setDays] = useState([]);
 
   const getWeather = async () => {
     const { granted } = await Location.requestForegroundPermissionsAsync();
+    console.log(granted); //위치를 허용함
     if (!granted) {
-      //허가를 받지 않았다면 setOk를 false로 해줌
-      setOk(false); //그러면 유저가 권한 요청을 거절했다는 것을 알 수 있음, 나중에는 허가를 받지 않은 경우, 슬픈 얼굴을 보여줄 수도 있음
+      setOk(false);
+      return; //위치 허용하지 않는다면, 함수 즉시 종료
     }
+    //위치 허용한다면 아래 코드 실행
+    // const location = await Location.getCurrentPositionAsync({ accuracy: 5 });
+    // console.log(location);
     const {
       coords: { latitude, longitude },
     } = await Location.getCurrentPositionAsync({ accuracy: 5 });
     const location = await Location.reverseGeocodeAsync(
-      {
-        latitude,
-        longitude,
-      },
+      { latitude, longitude },
       { useGoogleMaps: false }
     );
+    console.log(location);
     setCity(location[0].city);
 
-    const response = await fetch(
-      `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}`
-    );
-    const json = await response.json();
-    console.log(json);
-    console.log(json.main);
-    // setDays(json.main);
-
-    //then 방식, await 대신에 then, async 필요없고 fetch(url).then 하면 됨
-    // fetch(
-    //   `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}`
-    // )
-    //   .then((response) => response.json())
-    //   .then((data) => {
-    //     console.log(data.main);
-    //   });
-
-    //await async 축약 방식
-    // const json = await (
-    //   await fetch(
-    //     `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}`
-    //   )
-    // ).json();
-    // console.log(json);
-    // console.log(json.main);
-
-    //await aysnc 기본 방식
+    // 내 위치에 맞는 날씨 가져오기
     // const response = await fetch(
     //   `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&appid=${API_KEY}`
     // );
-    // const json = await response.json();
-    // console.log(json);
-    // console.log(json.main);
-    // setDays(json.main);
+    const response = await fetch(
+      `https://api.openweathermap.org/data/2.5/forecast?lat=${latitude}&lon=${longitude}&appid=${API_KEY}&units=metric`
+    );
+    const json = await response.json();
+    console.log(json);
+    console.log(json.list);
+    // setDays(json.list); //배열을 저장하자
+    setDays(
+      json.list.filter((weather) => {
+        if (weather.dt_txt.includes("06:00:00")) {
+          return weather;
+        }
+      })
+    );
   };
 
-  //이제 이 컴포넌트가 마운트되면 useEffect를 사용해서 getPermissions function을 호출
   useEffect(() => {
     getWeather();
   }, []);
+
   return (
     <View style={styles.container}>
       <View style={styles.city}>
         <Text style={styles.cityName}>{city}</Text>
       </View>
-      {/* styles.weather 이것이 모든 예보의 Container가 되는 것이 목표 */}
       <ScrollView
-        pagingEnabled
-        horizontal
-        showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.weather}
+        horizontal
+        pagingEnabled
+        indicatorStyle={false}
       >
-        <View style={styles.day}>
-          <Text style={styles.temp}>27</Text>
-          <Text style={styles.description}>Sunny</Text>
-        </View>
-        <View style={styles.day}>
-          <Text style={styles.temp}>27</Text>
-          <Text style={styles.description}>Sunny</Text>
-        </View>
-        <View style={styles.day}>
-          <Text style={styles.temp}>27</Text>
-          <Text style={styles.description}>Sunny</Text>
-        </View>
-        <View style={styles.day}>
-          <Text style={styles.temp}>27</Text>
-          <Text style={styles.description}>Sunny</Text>
-        </View>
+        {days.length === 0 ? (
+          <View style={styles.day}>
+            <ActivityIndicator
+              color="white"
+              style={{ marginTop: 10 }}
+              size="large"
+            />
+          </View>
+        ) : (
+          days.map((day, index) => (
+            <View key={index} style={styles.day}>
+              <Text style={styles.temp}>
+                {parseFloat(day.main.temp).toFixed(1)}
+              </Text>
+              <Text style={styles.description}>{day.weather[0].main}</Text>
+              <Text style={styles.tinyText}>{day.weather[0].description}</Text>
+            </View>
+          ))
+        )}
       </ScrollView>
     </View>
   );
@@ -128,5 +126,8 @@ const styles = StyleSheet.create({
   description: {
     marginTop: -30,
     fontSize: 60,
+  },
+  tinyText: {
+    fontSize: 40,
   },
 });
